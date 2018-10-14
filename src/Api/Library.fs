@@ -47,17 +47,31 @@ type Platform (services, connStr, events: ActionEvent Event) =
     do cmd.ExecuteNonQuery() |> ignore
   }
 
+  /// Will create a new user.
+  /// Note: Creating the user's emails could be done within the UserService, but I have split these two in order to
+  ///   demonstrate the simplicity of implementing this kind of pattern in F#.
+  ///   Because it isn't tied to the UserService, the user emails storage could be pulled out into a different service,
+  ///   but the integrity of the data on insert would still be maintained.
   member __.NewUser userInput emails =
     transaction connStr (fun ctx -> async {
       use! ctx = TransactionCtx.Open connStr
+      // Create the user.
       let! (UserId userId) = services.users.Post ctx userInput
-      events.Trigger <| RowCreated (userId, UserTable)
+      do events.Trigger <| RowCreated (userId, UserTable)
+
+      // This is part of the transaction just to keep the data strictly in-sync.
+      // This call could be connected to a different service or database if needed.
+      // Also, the transaction piece could be removed -- Allowing for better throughput, but poor data integrity.
       for email in emails do
         try
           do! services.userEmails.Put ctx (UserId userId) email
-          events.Trigger <| RelationCreated (userId, UserEmail)
         with e ->
-          return failwithf "Unable to insert %A: %A" email e
+          // Sample for a retry within a transaction.
+          do! services.userEmails.Put ctx (UserId userId) email
+
+        // This will fail if any subscribers are unable to consume the event.
+        // Due to the transaction call above, it will rollback the database if it cannot publish this event.
+        do events.Trigger <| RelationCreated (userId, UserEmail)
 
       return UserId userId
     })
