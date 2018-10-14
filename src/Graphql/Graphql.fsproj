@@ -12,4 +12,8 @@
     <PackageReference Include="FSharp.Data.GraphQL.Server" Version="0.0.7-beta" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.fsproj" />
+  </ItemGroup>
+
 </Project>
