@@ -5,6 +5,7 @@ open System.Net.Mail
 open FSharp.Data.GraphQL
 open FSharp.Data.GraphQL.Types
 open FSharp.Data.GraphQL.Relay
+open FSharp.Data.GraphQL.Execution
 open Common.Users
 
 module Resolvers =
@@ -43,7 +44,8 @@ module Resolvers =
           [ Define.Input("name", String)
           ],
           fun ctx info ->
-            System.Guid.NewGuid()
+            let (UserId id) = info.id
+            id
         )
       ]
     )
@@ -55,3 +57,11 @@ module Resolvers =
     )
   let exec = Executor schema
 
+  let direct query data = async {
+    let! res = exec.AsyncExecute(
+      queryOrMutation = query,
+      data = data
+    )
+    match res with
+    | Direct (data, errors) -> return data, errors
+  }
