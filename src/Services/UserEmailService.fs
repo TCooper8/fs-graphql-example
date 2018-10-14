@@ -5,7 +5,7 @@ open Common.UserEmails
 
 module UserEmailService =
   type private Service () =
-    interface IUserEmailService<Ctx> with
+    interface DbCtx IUserEmailService with
       member __.Put ctx (UserId id) email = async {
         use! cmd = ctx.Cmd()
         cmd.CommandText <-
@@ -26,4 +26,4 @@ module UserEmailService =
 
   let init () =
     Service()
-    :> Ctx IUserEmailService
+    :> DbCtx IUserEmailService

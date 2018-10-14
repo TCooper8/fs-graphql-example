@@ -6,7 +6,7 @@ open Npgsql
 
 module UserService =
   type private Service () =
-    interface Ctx IUserService with
+    interface DbCtx IUserService with
       member __.Get ctx id = async {
         use! cmd = ctx.Cmd()
         return failwithf "Not implemented"
@@ -48,4 +48,4 @@ module UserService =
 
   let init () =
     Service()
-    :> Ctx IUserService
+    :> DbCtx IUserService

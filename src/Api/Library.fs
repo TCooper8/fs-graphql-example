@@ -8,14 +8,14 @@ open Common.Eventing
 open Services
 
 type Services = {
-  users: Ctx IUserService
-  userEmails: Ctx IUserEmailService
+  users: DbCtx IUserService
+  userEmails: DbCtx IUserEmailService
 }
 
 type Platform (services, connStr, events: ActionEvent Event) =
   let x = 5
   let transaction connStr task = async {
-    use! ctx = TransactionCtx.Open connStr
+    use! ctx = TransactionDbCtx.Open connStr
     try
       let! res = task ctx
       do! ctx.Commit()
@@ -25,8 +25,8 @@ type Platform (services, connStr, events: ActionEvent Event) =
   }
 
   member __.Init () = async {
-    use! conn = ConnCtx.Open connStr
-    let ctx = conn :> Ctx
+    use! conn = ConnDbCtx.Open connStr
+    let ctx = conn :> DbCtx
     use! cmd = ctx.Cmd()
     cmd.CommandText <-
       """ create extension if not exists pgcrypto;
@@ -54,7 +54,7 @@ type Platform (services, connStr, events: ActionEvent Event) =
   ///   but the integrity of the data on insert would still be maintained.
   member __.NewUser userInput emails =
     transaction connStr (fun ctx -> async {
-      use! ctx = TransactionCtx.Open connStr
+      use! ctx = TransactionDbCtx.Open connStr
       // Create the user.
       let! (UserId userId) = services.users.Post ctx userInput
       do events.Trigger <| RowCreated (userId, UserTable)
