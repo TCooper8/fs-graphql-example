@@ -21,6 +21,7 @@ let ``Test new user`` () = async {
     |> Observable.subscribe (function
       | RowCreated (_, UsersTable) -> ()
       | RelationCreated (_, UserEmail) -> ()
+      | any -> failwithf "Event %A is unexpected" any
     )
   
   do! platform.Init()
