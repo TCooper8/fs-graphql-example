@@ -24,7 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Services\Services.fsproj" />
-    <ProjectReference Include="..\Api\Platform.fsproj" />
+    <ProjectReference Include="..\Platform\Platform.fsproj" />
+    <ProjectReference Include="..\Graphql\Graphql.fsproj" />
+    <ProjectReference Include="..\Json\Json.fsproj" />
   </ItemGroup>
 
 </Project>
